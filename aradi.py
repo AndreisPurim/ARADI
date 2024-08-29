@@ -70,7 +70,7 @@ def roundkeys(key):
     keys = [key]
     for i in range(1,16, 2):
         # Gets the past key, and then makes the schedule of rows i and i+1
-        ki, ki2 = keyschedule(keys[i-1], i)
+        ki, ki2 = keyschedule(keys[i-1], i-1)
         keys.append(ki)
         keys.append(ki2)
         # Functions to print, NEEDS TO DEBUG
@@ -107,9 +107,8 @@ def encryption_ARADI(state,key):
 
 
 # Note to myself:
-# In this version, the roundkey function is not functioning properly, because the last value of k_{i+2} is outputting the wrong value
-# This is probably an error in M1 or in t7 ^ (i + 1).
-# But I haven't got the time to check it.
+# Fixed roundkey() function
+# Must now check why the output is different from the expected.
 
 def main():
     # Just testing some values for now, this should be cleaner in the next version
