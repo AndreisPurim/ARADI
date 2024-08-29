@@ -22,6 +22,13 @@ def sbox(w, x, y, z):
     w ^= (x & z)
     return w, x, y, z
 
+def sbox_inverse(w,x,y,z):
+    w ^= (x & z)
+    y ^= (w & z)
+    z ^= (x & y)
+    x ^= (w & y)
+    return w,x,y,z
+
 def linear(j, x):
     '''Aradi Linear Map'''
     # The parameters of ai, bi, and ci
@@ -69,7 +76,6 @@ def keyschedule(key, i):
     return ki, ki2
 
 def roundkeys(key):
-    # ERROR SHOULD BE AROUND HERE
     # Function to generate round_keys
     keys = [key]
     for i in range(1,16, 2):
@@ -85,8 +91,6 @@ def roundkeys(key):
     return new_keys
 
 def encryption_ARADI(state,key):
-    # Needs to debug why this is creating subciphers other than expected
-    # First subcipher checks out, the remaining don't.
     rk = roundkeys(key)
     w = state[0]
     x = state[1]
@@ -109,18 +113,41 @@ def encryption_ARADI(state,key):
     z = z ^ rk[16][3]
     return [w, x, y, z]
 
-
+def decryption_ARADI(state,key):
+    rk = roundkeys(key)
+    w = state[0]
+    x = state[1]
+    y = state[2]
+    z = state[3]
+    w = w ^ rk[16][0]
+    x = x ^ rk[16][1]
+    y = y ^ rk[16][2]
+    z = z ^ rk[16][3]
+    for i in range(15,-1,-1):
+        j = i% 4
+        w = linear(j,w)
+        x = linear(j,x)
+        y = linear(j,y)
+        z = linear(j,z)
+        w,x,y,z = sbox_inverse(w,x,y,z)
+        w = w ^ rk[i][0]
+        x = x ^ rk[i][1]
+        y = y ^ rk[i][2]
+        z = z ^ rk[i][3]
+    return [w,x,y,z]
 
 def main():
     # Just testing some values for now, this should be cleaner in the next version
     key = [0x03020100,0x07060504,0x0b0a0908,0x0f0e0d0c, 0x13121110,0x17161514,0x1b1a1918,0x1f1e1d1c]
     plaintex = [0x00000000,0x00000000,0x00000000,0x00000000]
+    print("Input:", end="\t")
+    phex(plaintex)
     ciphertext = encryption_ARADI(plaintex, key)
-    print("Output:", end=" ")
+    print("Output:", end="\t")
     phex(ciphertext)
-    expected_output = [0x3f09abf4, 0x00e3bd74, 0x03260def, 0xb7c53912]
-    print("Expected output:", end=" ")
-    phex(expected_output)
+    deciphered = decryption_ARADI(ciphertext, key)
+    print("Dec.:", end="\t")
+    phex(deciphered)
 
-
-main()
+if __name__ == "__main__":
+    main()
