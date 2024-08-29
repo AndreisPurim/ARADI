@@ -34,8 +34,12 @@ def linear(j, x):
     # Get lower 16 bits using a mask
     l = (x & 0xFFFF)
     # Now, does the circular shifts
-    u ^= (u << a[j]) ^ (l << c[j])
-    l ^= (l << a[j]) ^ (u << b[j])
+    s0 = rot_16(u,a[j])
+    t0 = rot_16(l,a[j])
+    s1 = rot_16(u,b[j])
+    t1 = rot_16(l,c[j])
+    u ^= s0 ^ t1
+    l ^= t0 ^ s1
     # It should be noted that linear(linear(x, i), i) = x should be true
     # Use a mask of 32 bits to make sure it doesn't overflow.
     return ((u << 16) | l) & 0xFFFFFFFF
@@ -73,15 +77,16 @@ def roundkeys(key):
         ki, ki2 = keyschedule(keys[i-1], i-1)
         keys.append(ki)
         keys.append(ki2)
-        # Functions to print, NEEDS TO DEBUG
-        print(f"k{i}", end=" ")
-        phex(ki[4:])
-        print(f"k{i+1}", end=" ")
-        phex(ki2[:4])
-    return keys
+    # Now, remembers to take the 4 blocks of each key
+    new_keys = [key[:4]]
+    for i in range(1 ,16, 2):
+        new_keys.append(keys[i][4:])
+        new_keys.append(keys[i+1][:4])
+    return new_keys
 
 def encryption_ARADI(state,key):
-    # This should be right, following the paper
+    # Needs to debug why this is creating subciphers other than expected
+    # First subcipher checks out, the remaining don't.
     rk = roundkeys(key)
     w = state[0]
     x = state[1]
@@ -98,17 +103,13 @@ def encryption_ARADI(state,key):
         x = linear(j,x)
         y = linear(j,y)
         z = linear(j,z)
-        w = w ^ rk[16][0]
-        x = x ^ rk[16][1]
-        y = y ^ rk[16][2]
-        z = z ^ rk[16][3]
-    # Just to make sure python makes it into a hex
-    return [w & 0xFFFFFFFF,x & 0xFFFFFFFF,y & 0xFFFFFFFF,z & 0xFFFFFFFF]
+    w = w ^ rk[16][0]
+    x = x ^ rk[16][1]
+    y = y ^ rk[16][2]
+    z = z ^ rk[16][3]
+    return [w, x, y, z]
 
 
-# Note to myself:
-# Fixed roundkey() function
-# Must now check why the output is different from the expected.
 
 def main():
     # Just testing some values for now, this should be cleaner in the next version
