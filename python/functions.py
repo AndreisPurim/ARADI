@@ -145,32 +145,3 @@ def decryption_ARADI(state, key):
         z ^= rk[i][3]
 
     return [w, x, y, z]
-
-
-def main():
-    key = [
-        0x03020100,
-        0x07060504,
-        0x0B0A0908,
-        0x0F0E0D0C,
-        0x13121110,
-        0x17161514,
-        0x1B1A1918,
-        0x1F1E1D1C,
-    ]
-    plaintext = [0x00000000, 0x00000000, 0x00000000, 0x00000000]
-
-    print("Input:", end="\t")
-    phex(plaintext)
-
-    ciphertext = encryption_ARADI(plaintext, key)
-    print("Output:", end="\t")
-    phex(ciphertext)
-
-    deciphered = decryption_ARADI(ciphertext, key)
-    print("Dec.:", end="\t")
-    phex(deciphered)
-
-
-if __name__ == "__main__":
-    main()
