@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='pyaradi',
-    version='0.1.2',
+    version='0.1.3',
     author='A. Purim, G. Praciano',
     url='https://github.com/AndreisPurim/ARADI',
     author_email='andreispurim@gmail.com',
