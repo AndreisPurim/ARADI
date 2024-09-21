@@ -1,11 +1,6 @@
-def rotate(val, rot, bits):
-    """Generic rotate function for n-bits"""
-    return ((val << rot) | (val >> (bits - rot))) & ((1 << bits) - 1)
+"""Core ARADI functions, such as sbox, linear map, keyschedule and basic encryption and decryption blocks"""
 
-
-def phex(lst):
-    """Print hexadecimal representation of a list"""
-    print([hex(x) for x in lst])
+from pyaradi import aradi_utils
 
 
 def sbox(w, x, y, z):
@@ -35,10 +30,10 @@ def linear(j, x):
     u = (x >> 16) & 0xFFFF  # Upper 16 bits
     l = x & 0xFFFF  # Lower 16 bits
 
-    s0 = rotate(u, a[j], 16)
-    t0 = rotate(l, a[j], 16)
-    s1 = rotate(u, b[j], 16)
-    t1 = rotate(l, c[j], 16)
+    s0 = aradi_utils.rotate(u, a[j], 16)
+    t0 = aradi_utils.rotate(l, a[j], 16)
+    s1 = aradi_utils.rotate(u, b[j], 16)
+    t1 = aradi_utils.rotate(l, c[j], 16)
 
     u ^= s0 ^ t1
     l ^= t0 ^ s1
@@ -48,12 +43,18 @@ def linear(j, x):
 
 def m0(x, y):
     """M0 function"""
-    return rotate(x, 1, 32) ^ y, rotate(y, 3, 32) ^ rotate(x, 1, 32) ^ y
+    return (
+        aradi_utils.rotate(x, 1, 32) ^ y,
+        aradi_utils.rotate(y, 3, 32) ^ aradi_utils.rotate(x, 1, 32) ^ y,
+    )
 
 
 def m1(x, y):
     """M1 function"""
-    return rotate(x, 9, 32) ^ y, rotate(y, 28, 32) ^ rotate(x, 9, 32) ^ y
+    return (
+        aradi_utils.rotate(x, 9, 32) ^ y,
+        aradi_utils.rotate(y, 28, 32) ^ aradi_utils.rotate(x, 9, 32) ^ y,
+    )
 
 
 def keyschedule(key, i):
@@ -92,8 +93,8 @@ def roundkeys(key):
     return new_keys
 
 
-def encryption_ARADI(state, key):
-    """ARADI Encryption"""
+def aradi_encryption_block(state, key):
+    """ARADI Encryption block"""
     rk = roundkeys(key)
     w, x, y, z = state
 
@@ -119,8 +120,8 @@ def encryption_ARADI(state, key):
     return [w, x, y, z]
 
 
-def decryption_ARADI(state, key):
-    """ARADI Decryption"""
+def aradi_decryption_block(state, key):
+    """ARADI Decryption block"""
     rk = roundkeys(key)
     w, x, y, z = state
 
@@ -145,3 +146,41 @@ def decryption_ARADI(state, key):
         z ^= rk[i][3]
 
     return [w, x, y, z]
+
+
+if __name__ == "__main__":
+    # Example of inputs in the published NSA paper
+    print("Example of inputs in the published NSA paper")
+
+    key = [
+        0x03020100,
+        0x07060504,
+        0x0B0A0908,
+        0x0F0E0D0C,
+        0x13121110,
+        0x17161514,
+        0x1B1A1918,
+        0x1F1E1D1C,
+    ]
+    plaintex = [0x00000000, 0x00000000, 0x00000000, 0x00000000]
+    key = [
+        0x03020100,
+        0x07060504,
+        0x0B0A0908,
+        0x0F0E0D0C,
+        0x13121110,
+        0x17161514,
+        0x1B1A1918,
+        0x1F1E1D1C,
+    ]
+
+    # Function to print a hexadecimal list
+    phex = lambda x: str([hex(i) for i in x])
+
+    print(f"Input: \t{phex(plaintex)}")
+
+    ciphertext = aradi_encryption_block(plaintex, key)
+    print(f"Enc.: \t{phex(ciphertext)}")
+
+    deciphered = aradi_decryption_block(ciphertext, key)
+    print(f"Dec.: \t{phex(deciphered)}")
